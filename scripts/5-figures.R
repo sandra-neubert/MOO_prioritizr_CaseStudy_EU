@@ -180,7 +180,7 @@ p_corr <- ggcorrplot(
     plot.title = element_text(face = "bold", size = 14)
   ) +
   labs(
-    title = ""#"Spatial agreement between highlighted solutions"
+    title = ""
   )
 
 

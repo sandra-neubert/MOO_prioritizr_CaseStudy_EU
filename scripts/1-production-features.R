@@ -9,6 +9,7 @@ reshape_production_budget_data <- function(
     nuts2_names,
     nuts2_targets_df, # e.g. nuts2_crop_low
     target_col = "value") {
+  
   land_use <- gsub("^pu_|_budget_data$", "", dataset_name)
 
   zone_id <- production_zone_key[[paste0(land_use)]]
@@ -31,18 +32,13 @@ reshape_production_budget_data <- function(
     nuts_target <- nuts2_targets_df |>
       filter(NUTS_ID == nuts2) |>
       mutate(
-        target = ifelse(.data[[target_col]] < 1, 0, .data[[target_col]])
+        target = .data[[target_col]]#ifelse(.data[[target_col]] < 1, 0, .data[[target_col]])
       ) |>
       pull(target)
 
     if (length(nuts_target) == 0 || nuts_target == 0 || is.na(nuts_target)) next
 
     feature_name <- paste0(land_use, "_", nuts2)
-
-    # target_list[[feature_name]] <- tibble(
-    #   species = feature_name,
-    #   target  = nuts_target
-    # )
 
     target_list[[feature_name]] <- tibble(
       feature = feature_name,
