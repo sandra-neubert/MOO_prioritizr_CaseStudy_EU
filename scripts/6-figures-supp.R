@@ -7,8 +7,18 @@ source("")
 # LOAD DATA
 s_formatted_prop <- readRDS("data/outputs/ms3_test_sn_formatted_prop.rds")
 s_sf <- s_formatted_prop$s_sf
+sel_df <- s_formatted_prop$sel_df
 
-#PLOT
+# PREP DATA
+solution_pattern <- paste0("^solution_(", paste(sel_df$solution_id, collapse = "|"), ")_")
+
+s_sf <- s_sf %>%
+  select(
+    id,
+    geometry,
+    matches(solution_pattern)
+  )
+
 plot_data <- s_sf %>%
   pivot_longer(
     cols = -c(id, geometry),
@@ -16,14 +26,34 @@ plot_data <- s_sf %>%
     names_pattern = "solution_(\\d+)_(.*)",
     values_to = "prop"
   ) %>%
-  mutate(solution_id = as.integer(solution)) %>%
+  mutate(
+    solution_id = as.integer(solution),
+    use = case_when(
+      use == "restoration"  ~ "Restoration",
+      use == "production"   ~ "Production",
+      use == "conservation" ~ "Conservation",
+      use == "urban_area"   ~ "Urban area",
+      TRUE ~ use
+    )
+  ) %>%
   left_join(sel_df, by = "solution_id")
+
+plot_data$use <- factor(
+  plot_data$use,
+  levels = c("Restoration", "Production", "Conservation", "Urban area")
+)
+
+plot_data$sol_label <- factor(
+  plot_data$sol_label,
+  levels = c("Restoration-focused", "Equal weighting", "Production-focused")
+)
 
 panel_labels <- plot_data %>%
   distinct(use, sol_label) %>%
   arrange(use, sol_label) %>%
   mutate(panel = letters[1:n()])
 
+# PLOT
 supp_figure2 <- ggplot(plot_data) +
   geom_sf(aes(fill = prop), color = NA) +
   scale_fill_viridis_c(option = "plasma",
