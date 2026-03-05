@@ -5,10 +5,36 @@ library(purrr)
 # LOAD DATA
 PU_sf <- readRDS("data/formatted-data/PU_sf_sn.rds")
 
-# PREP FUNCTION
+# PREP FUNCTIONS
+find_pareto_knee <- function(x, y, normalize = TRUE) {
+  
+  # optionally normalize objectives
+  if (normalize) {
+    x <- (x - min(x)) / (max(x) - min(x))
+    y <- (y - min(y)) / (max(y) - min(y))
+  }
+  
+  # extreme points
+  i_min_x <- which.min(x)
+  i_min_y <- which.min(y)
+  
+  p1 <- c(x[i_min_x], y[i_min_x])
+  p2 <- c(x[i_min_y], y[i_min_y])
+  
+  # line coefficients
+  A <- p2[2] - p1[2]
+  B <- p1[1] - p2[1]
+  C <- p2[1] * p1[2] - p1[1] * p2[2]
+  
+  # perpendicular distance
+  d <- abs(A * x + B * y + C) / sqrt(A^2 + B^2)
+  
+  which.max(d)
+}
+
 prep_solution_output <- function(s, PU_sf, mode = "dominant") {
   
-  mode <- match.arg(mode)
+  #mode <- match.arg(mode)
   
   n_solutions <- max(
     str_extract(names(s), "(?<=solution_)\\d+") |> as.integer(),
@@ -154,14 +180,25 @@ prep_solution_output <- function(s, PU_sf, mode = "dominant") {
   obj_df$solution_id <- seq_len(nrow(obj_df))
   
   sol_min_rest <- obj_df$solution_id[which.min(obj_df[[1]])]
-  sol_min_prod <- obj_df$solution_id[which.min(obj_df[[2]])]
+  sol_min_prod <- obj_df$solution_id[
+    which(obj_df[[2]] == min(obj_df[[2]]))[which.max(obj_df[[1]][obj_df[[2]] == min(obj_df[[2]])])]
+  ]
   
-  obj_df$dist_to_center <- scale(obj_df[[1]])^2 + scale(obj_df[[2]])^2
+  mid_solution <- find_pareto_knee(
+    obj_df[[1]],   # restoration shortfall
+    obj_df[[2]]    # production shortfall
+  )
   
-  mid_solution <- obj_df %>%
-    arrange(dist_to_center) %>%
-    slice(2) %>%
-    pull(solution_id)
+  mid_solution <- obj_df$solution_id[mid_solution]
+  
+  browser()
+  
+  # obj_df$dist_to_center <- scale(obj_df[[1]])^2 + scale(obj_df[[2]])^2
+  # 
+  # mid_solution <- obj_df %>%
+  #   arrange(dist_to_center) %>%
+  #   slice(2) %>%
+  #   pull(solution_id)
   
   selected_solutions <- c(sol_min_rest, sol_min_prod, mid_solution)
   
@@ -184,10 +221,11 @@ prep_solution_output <- function(s, PU_sf, mode = "dominant") {
 }
 
 #FORMAT DATA
-s <- readRDS("data/outputs/ms3_test_sn.rds")
+scenario_name <- "multi_hier_rest_0.3"
+s <- readRDS(paste0("data/outputs/", scenario_name, ".rds"))
 s_formatted <- prep_solution_output(s, PU_sf)
 s_formatted_prop <- prep_solution_output(s, PU_sf, mode = "proportions")
 
-saveRDS(s_formatted, "data/outputs/ms3_test_sn_formatted.rds")
-saveRDS(s_formatted_prop, "data/outputs/ms3_test_sn_formatted_prop.rds")
+saveRDS(s_formatted, paste0("data/outputs/formatted/", scenario_name, "_formatted.rds"))
+saveRDS(s_formatted_prop, paste0("data/outputs/formatted/", scenario_name, "_formatted_prop.rds"))
 

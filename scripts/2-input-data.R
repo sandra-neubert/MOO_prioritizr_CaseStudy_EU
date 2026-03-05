@@ -51,7 +51,7 @@ feat <- feat_rij |>
   drop_na(name)
 
 # production features
-prod_feat <- readRDS("data/formatted-data/production_features_split_sn.rds")
+prod_feat <- readRDS("data/formatted-data/production_features_split_ref_sn.rds")
 
 # Combine all results into one big rij and targets table
 rij_production <- bind_rows(lapply(prod_feat, `[[`, "rij"))

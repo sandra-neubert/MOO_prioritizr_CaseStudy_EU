@@ -122,4 +122,5 @@ all_results <- lapply(names(files), function(dataset_name) {
   )
 })
 
-saveRDS(all_results, "data/formatted-data/production_features_split_sn.rds")
+saveRDS(all_results, "data/formatted-data/production_features_split_ref_sn.rds")
+gc()

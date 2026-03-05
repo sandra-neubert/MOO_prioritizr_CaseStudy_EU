@@ -46,8 +46,6 @@ restoration <- pu_restoration_budget_data |>
   as.matrix() |>
   replace_na(0)
 
-restoration_constraint <- 0.141
-
 # Restoration budget breakdown
 pu_restore_natural_budget_data <- read_csv("data/formatted-data/linear_constraints/pu_restore_natural_budget_data.csv")
 
@@ -77,6 +75,9 @@ restoration_wetland <- pu_wetland_rest_budget_data |>
   as.matrix() |>
   replace_na(0)
 
+# area constraint
+restoration_constraint <- 0.141
+
 # SINGLE-OBJECTIVE PROBLEMS
 # 1. Production objective
 p_prod <- problem(x = pu,
@@ -93,7 +94,7 @@ p_prod_solve <- p_prod |>
   add_gurobi_solver(gap = 0.2, threads = cores,
                     verbose = TRUE)
 
-s_prod <- solve(p_prod_solve)
+#s_prod <- solve(p_prod_solve)
 
 # 2. Restoration objective
 p_rest <- problem(x = pu,
@@ -103,13 +104,16 @@ p_rest <- problem(x = pu,
                   rij = rij_all) |>
   add_min_shortfall_objective(nrow(pu))
 
-p_rest_solve <- p_rest |>
+p_rest_clean <- p_rest |>
   # add_binary_decisions() |>
   add_proportion_decisions() |>
   add_manual_targets(targ_restore) |>
   add_gurobi_solver(gap = 0.2, threads = cores,
                     verbose = TRUE) |>
   add_manual_bounded_constraints(manual_bounded_constraints)
+
+# area constraint
+restoration_constraint <- 0.141
 
 # no more than a bit over the restoration goal of ~14%
 p_rest_solve <- p_rest_solve |>
@@ -138,7 +142,7 @@ p_rest_solve <- p_rest_solve |>
                          data = restoration_wetland)
 
 
-s_rest <- solve(p_rest_solve)
+#s_rest <- solve(p_rest_solve)
 
 # MULTI-OBJECTIVE PROBLEMS
 # 1. weighted sum
@@ -177,7 +181,7 @@ t2 <- system.time({
                       verbose = TRUE)
   
   # solve problem
-  ms1 <- solve(mp1)
+  ms2 <- solve(mp2)
 })
 
 t2

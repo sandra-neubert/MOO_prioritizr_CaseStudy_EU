@@ -4,7 +4,8 @@ library(sf)
 library(irr)
 library(ggcorrplot)
 
-s_formatted <- readRDS("data/outputs/ms3_test_sn_formatted.rds")
+scenario_name <- "multi_hier_rest_0.3"
+s_formatted <- readRDS(paste0("data/outputs/formatted/", scenario_name, "_formatted.rds"))
 obj_df <- s_formatted$obj_df
 sel_df <- s_formatted$sel_df
 s_sf <- s_formatted$s_sf
@@ -26,7 +27,7 @@ pareto_plot <- ggplot(obj_df, aes(x = restore_obj, y = prod_obj)) +
     size = 3.5
   ) +
   scale_color_manual(
-    values = setNames(sel_df$sol_colour, sel_df$sol_label),
+    values = setNames(sel_df$sol_colour, sel_df$sol_label), #(c("grey65","grey65","grey65"), sel_df$sol_label),
     breaks = sol_order
   ) +
   labs(
@@ -102,7 +103,7 @@ final_plot <- pareto_plot /
      (maps[["Production-focused"]] + theme(legend.position="none"))) +
   plot_annotation(tag_levels = 'A')
 
-ggsave("figures/plot_pf_maps_constraints_sn.png",
+ggsave("figures/plot_pf_maps_no_constraints_sn2.png",
        final_plot, width = 8.5, height = 6.5, dpi = 300)
 
 ###### Corr plot
@@ -285,13 +286,10 @@ p_area <- ggplot(area_summary,
 
 ### Combine all plots
 
-top_row <- pareto_plot   /
-  ((maps[[2]] + theme(legend.position="none") +
-      ggtitle("Production-focused")) |
-     (maps[[1]]+ #guides(fill=guide_legend(ncol=2)) +
-        ggtitle("Equal weighting")) |
-     (maps[[3]] + theme(legend.position="none") + ggtitle("Restoration-focused"))
-  ) +
+top_row <- pareto_plot /
+  ((maps[["Restoration-focused"]] + theme(legend.position="none")) |
+     (maps[["Equal weighting"]]) |
+     (maps[["Production-focused"]] + theme(legend.position="none"))) +
   coord_fixed()
 
 bottom_row <-
@@ -305,5 +303,6 @@ bottom_row <-
 
 figure2 <- top_row / bottom_row + plot_annotation(tag_levels = 'A')
 
-ggsave("figures/figure2_sn.png",
+
+ggsave(paste0("figures/", scenario_name, ".png"),
        figure2, width = 11, height = 10, dpi = 300)
