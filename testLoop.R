@@ -1,4 +1,4 @@
-restoration_values <- c(0.30)#0.141)#, 0.30)
+restoration_values <- c(0.141)#, 0.30)
 
 for (rc in restoration_values) {
   
@@ -36,33 +36,33 @@ for (rc in restoration_values) {
                            sense = "<=",
                            data = restoration_wetland)
   
-  # cat("Running weighted sum...\n")
-  # 
-  # set.seed(123)
-  # weight_mat <- matrix(runif(100), ncol = 2)
-  # 
-  # t_ws <- system.time({
-  #   
-  #   mp_ws <-
-  #     multi_problem(restore_obj = p_rest_solve,
-  #                   prod_obj = p_prod_solve) %>%
-  #     add_weighted_sum_approach(
-  #       weight_mat,
-  #       verbose = TRUE
-  #     ) %>%
-  #     add_gurobi_solver(gap = 0.2,
-  #                       threads = cores,
-  #                       verbose = TRUE)
-  #   
-  #   ms_ws <- solve(mp_ws)
-  # })
-  # 
-  # saveRDS(
-  #   ms_ws,
-  #   paste0("data/outputs/multi_ws_rest_", rc, ".rds")
-  # )
-  # 
-  # cat("Weighted sum done in", t_ws[3], "seconds\n")
+  cat("Running weighted sum...\n")
+
+  set.seed(123)
+  weight_mat <- matrix(runif(100), ncol = 2)
+
+  t_ws <- system.time({
+
+    mp_ws <-
+      multi_problem(restore_obj = p_rest_solve,
+                    prod_obj = p_prod_solve) %>%
+      add_weighted_sum_approach(
+        weight_mat,
+        verbose = TRUE
+      ) %>%
+      add_gurobi_solver(gap = 0.2,
+                        threads = cores,
+                        verbose = TRUE)
+
+    ms_ws <- solve(mp_ws)
+  })
+
+  saveRDS(
+    ms_ws,
+    paste0("data/outputs/multi_ws_rest_", rc, ".rds")
+  )
+
+  cat("Weighted sum done in", t_ws[3], "seconds\n")
 
   cat("Running hierarchical...\n")
   

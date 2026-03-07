@@ -2,10 +2,9 @@ library(tidyverse)
 library(patchwork)
 library(sf)
 
-source("")
-
 # LOAD DATA
-s_formatted_prop <- readRDS("data/outputs/ms3_test_sn_formatted_prop.rds")
+scenario_name <- "multi_ws_rest_0.3"
+s_formatted_prop <- readRDS(paste0("data/outputs/formatted/", scenario_name, "_formatted_prop.rds"))
 s_sf <- s_formatted_prop$s_sf
 sel_df <- s_formatted_prop$sel_df
 
@@ -45,7 +44,7 @@ plot_data$use <- factor(
 
 plot_data$sol_label <- factor(
   plot_data$sol_label,
-  levels = c("Restoration-focused", "Equal weighting", "Production-focused")
+  levels = c("Restoration-focused", "Equal trade-offs", "Production-focused")
 )
 
 panel_labels <- plot_data %>%
@@ -87,7 +86,7 @@ supp_figure2 <- ggplot(plot_data) +
     plot.title = ggplot2::element_text(size = 20, colour = "black")
   )
 
-ggsave("figures/supp_figure2.png",
+ggsave(paste0("figures/supp_fig2_", scenario_name, ".png"),
        supp_figure2,
        width = 12, height = 13, dpi = 300
 )

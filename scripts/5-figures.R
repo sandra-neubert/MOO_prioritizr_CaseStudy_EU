@@ -4,14 +4,14 @@ library(sf)
 library(irr)
 library(ggcorrplot)
 
-scenario_name <- "multi_hier_rest_0.3"
+scenario_name <- "multi_hier_rest_0.141"
 s_formatted <- readRDS(paste0("data/outputs/formatted/", scenario_name, "_formatted.rds"))
 obj_df <- s_formatted$obj_df
 sel_df <- s_formatted$sel_df
 s_sf <- s_formatted$s_sf
 
 ######## Pareto front plot
-sol_order <- c("Restoration-focused", "Equal weighting", "Production-focused")
+sol_order <- c("Restoration-focused", "Equal trade-offs", "Production-focused")
 
 sel_df <- sel_df %>%
   mutate(
@@ -20,7 +20,7 @@ sel_df <- sel_df %>%
   arrange(sol_label)
 
 pareto_plot <- ggplot(obj_df, aes(x = restore_obj, y = prod_obj)) +
-  geom_point(color = "grey65", size = 2.5) +
+  geom_point(color = "grey65", size = 2) +
   geom_point(
     data = sel_df,
     aes(color = sol_label),
@@ -31,7 +31,7 @@ pareto_plot <- ggplot(obj_df, aes(x = restore_obj, y = prod_obj)) +
     breaks = sol_order
   ) +
   labs(
-    title = "Approximated pareto front with selected solutions",
+    title = "Approximated pareto front",
     x = "Restoration objective (shortfall)",
     y = "Production objective (shortfall)",
     color = "Selected solutions"
@@ -99,7 +99,7 @@ names(maps) <- sel_df$sol_label
 
 final_plot <- pareto_plot /
   ((maps[["Restoration-focused"]] + theme(legend.position="none")) |
-     (maps[["Equal weighting"]]) |
+     (maps[["Equal trade-offs"]]) |
      (maps[["Production-focused"]] + theme(legend.position="none"))) +
   plot_annotation(tag_levels = 'A')
 
@@ -285,12 +285,37 @@ p_area <- ggplot(area_summary,
 
 
 ### Combine all plots
+# 
+# top_row <- pareto_plot /
+#   ((maps[["Restoration-focused"]] + theme(legend.position="none")) |
+#      (maps[["Equal trade-offs"]]) |
+#      (maps[["Production-focused"]] + theme(legend.position="none"))) +
+#   coord_fixed()
+# 
+# bottom_row <-
+#   ( (p_area + theme(legend.position = "none") +
+#        scale_y_continuous(
+#          expand = c(0, 0),
+#          limits = c(0, 1)
+#        )) |
+#       p_corr) +
+#   plot_layout(widths = c(3,1))
+# 
+# figure2 <- top_row / bottom_row + plot_annotation(tag_levels = 'A')
+# 
+# 
+# ggsave(paste0("figures/", scenario_name, ".png"),
+#        figure2, width = 11, height = 10, dpi = 300)
 
-top_row <- pareto_plot /
-  ((maps[["Restoration-focused"]] + theme(legend.position="none")) |
-     (maps[["Equal weighting"]]) |
-     (maps[["Production-focused"]] + theme(legend.position="none"))) +
-  coord_fixed()
+top_row <- plot_spacer() | 
+  (pareto_plot ) | 
+  plot_spacer()
+
+top_row <- top_row + plot_layout(widths = c(1, 2, 1))
+
+middle_row <-   ((maps[["Restoration-focused"]] + theme(legend.position="none")) |
+                   (maps[["Equal trade-offs"]]) |
+                   (maps[["Production-focused"]] + theme(legend.position="none")))
 
 bottom_row <-
   ( (p_area + theme(legend.position = "none") +
@@ -301,8 +326,8 @@ bottom_row <-
       p_corr) +
   plot_layout(widths = c(3,1))
 
-figure2 <- top_row / bottom_row + plot_annotation(tag_levels = 'A')
-
+figure2 <- top_row / middle_row / bottom_row + plot_annotation(tag_levels = 'A')
 
 ggsave(paste0("figures/", scenario_name, ".png"),
-       figure2, width = 11, height = 10, dpi = 300)
+       figure2, width = 9, height = 10, dpi = 300)
+

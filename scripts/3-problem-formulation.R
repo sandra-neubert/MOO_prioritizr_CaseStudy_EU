@@ -3,6 +3,7 @@ library(fst)
 library(gurobi)
 library(tidyverse)
 library(sf)
+set.seed(123)
 
 cores <- 3
 fst::threads_fst(nr_of_threads = cores, reset_after_fork = NULL) # Set number for fst
@@ -112,78 +113,95 @@ p_rest_clean <- p_rest |>
                     verbose = TRUE) |>
   add_manual_bounded_constraints(manual_bounded_constraints)
 
-# area constraint
-restoration_constraint <- 0.141
+restoration_values <- c(0.141)#, 0.30)
 
-# no more than a bit over the restoration goal of ~14%
-p_rest_solve <- p_rest_solve |>
-  add_linear_constraints(threshold = nrow(pu)*restoration_constraint*1.01,
-                         sense = "<=",
-                         data = restoration)
-
-# no less than restoration 25% restoration target
-p_rest_solve <- p_rest_solve |>
-  add_linear_constraints(threshold = nrow(pu)*restoration_constraint*0,
-                         sense = ">=",
-                         data = restoration)
-
-p_rest_solve <- p_rest_solve |>
-  add_linear_constraints(threshold = nrow(pu)*0.05,
-                         sense = ">=",
-                         data = restoration_crop) |>
-  add_linear_constraints(threshold = nrow(pu)*0.05,
-                         sense = ">=",
-                         data = restoration_forest)|>
-  add_linear_constraints(threshold = nrow(pu)*0.05,
-                         sense = "<=",
-                         data = restoration_natural)|>
-  add_linear_constraints(threshold = nrow(pu)*0.0086,
-                         sense = "<=",
-                         data = restoration_wetland)
-
-
-#s_rest <- solve(p_rest_solve)
-
-# MULTI-OBJECTIVE PROBLEMS
-# 1. weighted sum
-set.seed(123)
-weight_mat <- matrix(runif(100), ncol = 2)
-
-t1 <- system.time({
-  mp1 <-
-    multi_problem(restore_obj = p_rest_solve, prod_obj = p_prod_solve) %>%
-    add_weighted_sum_approach(
-     weight_mat,
-      verbose = TRUE
-    ) %>%
-    add_gurobi_solver(gap = 0.2, threads = cores,
-                      verbose = TRUE)
+for (rc in restoration_values) {
   
-  # solve problem
-  ms1 <- solve(mp1)
-})
-
-t1
-
-saveRDS(ms1, "data/outputs/multi_ws_rest_constr_sn.rds")
-
-# 2. hierarchical
-rel_tol_mat <- matrix(seq(0, 1, length.out = 50), ncol = 1)
-
-t2 <- system.time({
-  mp2 <-
-    multi_problem(restore_obj = p_rest_solve, prod_obj = p_prod_solve) %>%
-    add_rel_constraint_approach(
-      rel_tol_mat,
-      verbose = TRUE
-    ) %>%
-    add_gurobi_solver(gap = 0.2, threads = cores,
-                      verbose = TRUE)
+  cat("Running scenario with restoration =", rc, "\n")
   
-  # solve problem
-  ms2 <- solve(mp2)
-})
+  # RESTORATION PROBLEM
+  # overall restoration cap
+  p_rest_solve <- p_rest_clean |>
+    add_linear_constraints(
+      threshold = nrow(pu) * rc * 1.01,
+      sense = "<=",
+      data = restoration
+    )
+  
+  # lower bound (currently zero but kept for structure)
+  p_rest_solve <- p_rest_solve |>
+    add_linear_constraints(
+      threshold = nrow(pu) * rc * 0,
+      sense = ">=",
+      data = restoration
+    )
+  
+  # composition constraints
+  p_rest_solve <- p_rest_solve |>
+    add_linear_constraints(threshold = nrow(pu)*0.05,
+                           sense = ">=",
+                           data = restoration_crop) |>
+    add_linear_constraints(threshold = nrow(pu)*0.05,
+                           sense = ">=",
+                           data = restoration_forest) |>
+    add_linear_constraints(threshold = nrow(pu)*0.05,
+                           sense = "<=",
+                           data = restoration_natural) |>
+    add_linear_constraints(threshold = nrow(pu)*0.0086,
+                           sense = "<=",
+                           data = restoration_wetland)
+  
+  cat("Running weighted sum...\n")
 
-t2
-
-saveRDS(ms2, "data/outputs/multi_hier_rest_constr_sn.rds")
+  weight_mat <- matrix(runif(100), ncol = 2)
+  
+  t_ws <- system.time({
+    
+    mp_ws <-
+      multi_problem(restore_obj = p_rest_solve,
+                    prod_obj = p_prod_solve) %>%
+      add_weighted_sum_approach(
+        weight_mat,
+        verbose = TRUE
+      ) %>%
+      add_gurobi_solver(gap = 0.2,
+                        threads = cores,
+                        verbose = TRUE)
+    
+    ms_ws <- solve(mp_ws)
+  })
+  
+  saveRDS(
+    ms_ws,
+    paste0("data/outputs/multi_ws_rest_", rc, ".rds")
+  )
+  
+  cat("Weighted sum done in", t_ws[3], "seconds\n")
+  
+  cat("Running hierarchical...\n")
+  
+  rel_tol_mat <- matrix(seq(0, 1, length.out = 50), ncol = 1)
+  
+  t_hier <- system.time({
+    
+    mp_hier <-
+      multi_problem(restore_obj = p_rest_solve,
+                    prod_obj = p_prod_solve) %>%
+      add_hier_approach(
+        rel_tol_mat,
+        verbose = TRUE
+      ) %>%
+      add_gurobi_solver(gap = 0.2,
+                        threads = cores,
+                        verbose = TRUE)
+    
+    ms_hier <- solve(mp_hier)
+  })
+  
+  saveRDS(
+    ms_hier,
+    paste0("data/outputs/multi_hier_rest_", rc, ".rds")
+  )
+  
+  cat("Hierarchical done in", t_hier[3], "seconds\n\n")
+}

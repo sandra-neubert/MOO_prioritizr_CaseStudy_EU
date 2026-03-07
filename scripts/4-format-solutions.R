@@ -6,30 +6,61 @@ library(purrr)
 PU_sf <- readRDS("data/formatted-data/PU_sf_sn.rds")
 
 # PREP FUNCTIONS
-find_pareto_knee <- function(x, y, normalize = TRUE) {
+# find_pareto_elbow <- function(df) { #kneedle approach
+# 
+#   sol_min_rest <- df$solution_id[which.min(df[[1]])]
+#   sol_min_prod <- df$solution_id[
+#     which(df[[2]] == min(df[[2]]))[which.max(df[[1]][df[[2]] == min(df[[2]])])]
+#   ]
+#   
+#   # normalize
+#   x <- scales::rescale(df$restore_obj)
+#   y <- scales::rescale(df$prod_obj)
+#   
+#   # line between endpoints
+#   x1 <- x[sol_min_rest]; y1 <- y[sol_min_rest] 
+#   x2 <- x[sol_min_prod]; y2 <- y[sol_min_prod]
+#   
+#   # perpendicular distance
+#   dist <- abs((y2 - y1)*x - (x2 - x1)*y + x2*y1 - y2*x1) /
+#     sqrt((y2 - y1)^2 + (x2 - x1)^2)
+#   
+#   elbow <- which.max(dist)
+#   
+#   return(c(sol_min_rest, sol_min_prod, elbow))
+# }
+
+# find_pareto_elbow <- function(df){
+#   
+#   df <- df %>% arrange(restore_obj)
+#   
+#   slope <- diff(df$prod_obj) / diff(df$restore_obj)
+#   
+#   curvature <- abs(diff(slope))
+#   
+#   knee_index <- which.max(curvature) + 1
+#   
+#   df$solution_id[knee_index]
+# }
+
+find_pareto_elbow <- function(df){
   
-  # optionally normalize objectives
-  if (normalize) {
-    x <- (x - min(x)) / (max(x) - min(x))
-    y <- (y - min(y)) / (max(y) - min(y))
-  }
+  df <- df %>% arrange(restore_obj)
   
-  # extreme points
-  i_min_x <- which.min(x)
-  i_min_y <- which.min(y)
+  x <- df$restore_obj
+  y <- df$prod_obj
   
-  p1 <- c(x[i_min_x], y[i_min_x])
-  p2 <- c(x[i_min_y], y[i_min_y])
+  # endpoints
+  p1 <- c(x[1], y[1])
+  p2 <- c(x[length(x)], y[length(x)])
   
-  # line coefficients
-  A <- p2[2] - p1[2]
-  B <- p1[1] - p2[1]
-  C <- p2[1] * p1[2] - p1[1] * p2[2]
+  # distance to line
+  d <- abs((p2[2]-p1[2])*x - (p2[1]-p1[1])*y + p2[1]*p1[2] - p2[2]*p1[1]) /
+    sqrt((p2[2]-p1[2])^2 + (p2[1]-p1[1])^2)
   
-  # perpendicular distance
-  d <- abs(A * x + B * y + C) / sqrt(A^2 + B^2)
+  knee_index <- which.max(d)
   
-  which.max(d)
+  df$solution_id[knee_index]
 }
 
 prep_solution_output <- function(s, PU_sf, mode = "dominant") {
@@ -183,15 +214,11 @@ prep_solution_output <- function(s, PU_sf, mode = "dominant") {
   sol_min_prod <- obj_df$solution_id[
     which(obj_df[[2]] == min(obj_df[[2]]))[which.max(obj_df[[1]][obj_df[[2]] == min(obj_df[[2]])])]
   ]
-  
-  mid_solution <- find_pareto_knee(
-    obj_df[[1]],   # restoration shortfall
-    obj_df[[2]]    # production shortfall
-  )
-  
-  mid_solution <- obj_df$solution_id[mid_solution]
-  
-  browser()
+
+  mid_solution <- find_pareto_elbow(obj_df)
+  # print(mid_solution)
+  # 
+  # mid_solution <- obj_df$solution_id[mid_solution]
   
   # obj_df$dist_to_center <- scale(obj_df[[1]])^2 + scale(obj_df[[2]])^2
   # 
@@ -199,7 +226,7 @@ prep_solution_output <- function(s, PU_sf, mode = "dominant") {
   #   arrange(dist_to_center) %>%
   #   slice(2) %>%
   #   pull(solution_id)
-  
+
   selected_solutions <- c(sol_min_rest, sol_min_prod, mid_solution)
   
   sel_df <- obj_df %>%
@@ -208,7 +235,7 @@ prep_solution_output <- function(s, PU_sf, mode = "dominant") {
     mutate(
       sol_label = c("Restoration-focused",
                     "Production-focused",
-                    "Equal weighting"),
+                    "Equal trade-offs"),
       sol_label = factor(sol_label, levels = sol_label),
       sol_colour = c("#009E73", "#0072B2", "#D55E00")
     )
@@ -221,11 +248,11 @@ prep_solution_output <- function(s, PU_sf, mode = "dominant") {
 }
 
 #FORMAT DATA
-scenario_name <- "multi_hier_rest_0.3"
+scenario_name <- "multi_hier_rest_0.141"
 s <- readRDS(paste0("data/outputs/", scenario_name, ".rds"))
 s_formatted <- prep_solution_output(s, PU_sf)
-s_formatted_prop <- prep_solution_output(s, PU_sf, mode = "proportions")
+#s_formatted_prop <- prep_solution_output(s, PU_sf, mode = "proportions")
 
 saveRDS(s_formatted, paste0("data/outputs/formatted/", scenario_name, "_formatted.rds"))
-saveRDS(s_formatted_prop, paste0("data/outputs/formatted/", scenario_name, "_formatted_prop.rds"))
+#saveRDS(s_formatted_prop, paste0("data/outputs/formatted/", scenario_name, "_formatted_prop.rds"))
 
