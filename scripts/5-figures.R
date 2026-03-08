@@ -4,7 +4,7 @@ library(sf)
 library(irr)
 library(ggcorrplot)
 
-scenario_name <- "multi_hier_rest_0.141"
+scenario_name <- "multi_hier_rest_0.3"
 s_formatted <- readRDS(paste0("data/outputs/formatted/", scenario_name, "_formatted.rds"))
 obj_df <- s_formatted$obj_df
 sel_df <- s_formatted$sel_df
