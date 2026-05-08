@@ -1,3 +1,5 @@
+#source("scripts/0-preliminaries.R") # for package installation
+
 library(tidyverse)
 library(sf)
 library(purrr)
@@ -6,43 +8,6 @@ library(purrr)
 PU_sf <- readRDS("data/formatted-data/PU_sf_sn.rds")
 
 # PREP FUNCTIONS
-# find_pareto_elbow <- function(df) { #kneedle approach
-# 
-#   sol_min_rest <- df$solution_id[which.min(df[[1]])]
-#   sol_min_prod <- df$solution_id[
-#     which(df[[2]] == min(df[[2]]))[which.max(df[[1]][df[[2]] == min(df[[2]])])]
-#   ]
-#   
-#   # normalize
-#   x <- scales::rescale(df$restore_obj)
-#   y <- scales::rescale(df$prod_obj)
-#   
-#   # line between endpoints
-#   x1 <- x[sol_min_rest]; y1 <- y[sol_min_rest] 
-#   x2 <- x[sol_min_prod]; y2 <- y[sol_min_prod]
-#   
-#   # perpendicular distance
-#   dist <- abs((y2 - y1)*x - (x2 - x1)*y + x2*y1 - y2*x1) /
-#     sqrt((y2 - y1)^2 + (x2 - x1)^2)
-#   
-#   elbow <- which.max(dist)
-#   
-#   return(c(sol_min_rest, sol_min_prod, elbow))
-# }
-
-# find_pareto_elbow <- function(df){
-#   
-#   df <- df %>% arrange(restore_obj)
-#   
-#   slope <- diff(df$prod_obj) / diff(df$restore_obj)
-#   
-#   curvature <- abs(diff(slope))
-#   
-#   knee_index <- which.max(curvature) + 1
-#   
-#   df$solution_id[knee_index]
-# }
-
 find_pareto_elbow <- function(df){
   
   df <- df %>% arrange(restore_obj)
@@ -95,10 +60,8 @@ prep_solution_output <- function(s, PU_sf, mode = "dominant") {
   is_binary <- all(test_vals %in% c(0,1))
   
   print(paste("Binary input:", is_binary))
-  
-  # ---------------------------
+
   # extraction functions
-  # ---------------------------
   
   extract_binary <- function(df, sol_id) {
     

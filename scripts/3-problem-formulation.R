@@ -1,6 +1,9 @@
+#source("scripts/0-preliminaries.R") # for package installation
+
 library(prioritizr)
 library(fst)
 library(gurobi)
+#library(highs) # highs or gurobi here, depending which solver is installed
 library(tidyverse)
 library(sf)
 set.seed(123)
@@ -91,9 +94,7 @@ p_prod <- problem(x = pu,
 p_prod_solve <- p_prod |>
 #  add_binary_decisions() |>
   add_proportion_decisions() |>
-  add_manual_targets(targ_prod) |>
-  add_gurobi_solver(gap = 0.2, threads = cores,
-                    verbose = TRUE)
+  add_manual_targets(targ_prod) 
 
 #s_prod <- solve(p_prod_solve)
 
@@ -109,8 +110,6 @@ p_rest_clean <- p_rest |>
   # add_binary_decisions() |>
   add_proportion_decisions() |>
   add_manual_targets(targ_restore) |>
-  add_gurobi_solver(gap = 0.2, threads = cores,
-                    verbose = TRUE) |>
   add_manual_bounded_constraints(manual_bounded_constraints)
 
 restoration_values <- c(0.141)#, 0.30)
@@ -160,11 +159,11 @@ for (rc in restoration_values) {
     mp_ws <-
       multi_problem(restore_obj = p_rest_solve,
                     prod_obj = p_prod_solve) %>%
-      add_weighted_sum_approach(
+      add_wtd_sum_approach(
         weight_mat,
         verbose = TRUE
       ) %>%
-      add_gurobi_solver(gap = 0.2,
+      add_default_solver(gap = 0.2,
                         threads = cores,
                         verbose = TRUE)
     
@@ -191,7 +190,7 @@ for (rc in restoration_values) {
         rel_tol_mat,
         verbose = TRUE
       ) %>%
-      add_gurobi_solver(gap = 0.2,
+      add_default_solver(gap = 0.2,
                         threads = cores,
                         verbose = TRUE)
     

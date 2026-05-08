@@ -1,3 +1,5 @@
+#source("scripts/0-preliminaries.R") # for package installation
+
 library(fst)
 library(tidyverse)
 library(sf)
