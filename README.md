@@ -24,16 +24,17 @@ Raw input data are from [Chapman et al. (2025)](https://www.nature.com/articles/
 ## Code structure
 
 All scripts are in the `/scripts/` folder and should be run in order:
+**`0-preliminaries.R`**: Gives information on installing packages and solvers required to run this analysis.
 
-**`1-production-features.R`**: Formats production features and constructs NUTS2-level subnational targets for cropland (low, medium, high intensity), pasture (low, high intensity), and forestry (multifunctional, production) land-use types, used as constraints in the optimization.
+**`1-production-features.R`**: Formats production features and constructs NUTS2-level subnational targets for cropland (low, medium, high intensity), pasture (low, high intensity), and forestry (multifunctional, production) land-use types used in the production objective.
 
-**`2-input-data.R`**: Loads and prepares all input data, including planning units, zone-feature contribution matrices (`rij`), and biodiversity and production feature targets. Saves compiled inputs to `data/formatted-data/` for use in subsequent scripts.
+**`2-input-data.R`**: Loads and prepares all input data, including planning units, zone-feature contribution matrices, and biodiversity and production feature targets. Saves compiled inputs to `data/formatted-data/` for use in subsequent scripts.
 
-**`3-problem-formulation.R`**: Formulates and solves the multi-objective spatial optimization problems using `prioritizr`, including weighted-sum and hierarchical formulations across a range of weight combinations to trace the Pareto front. Solver outputs are saved to `data/outputs/`.
+**`3-problem-formulation.R`**: Formulates and solves the multi-objective spatial optimization problems using `prioritizr`, including weighted-sum and hierarchical formulations across a range of weight and relative tolerance combinations to obtain the Pareto front. 
 
-**`4-format-solutions.R`**: Processes solver outputs — computes objective values and feature shortfalls, identifies Pareto-efficient solutions and elbow points, and formats results as spatial objects. Formatted outputs are saved to `data/outputs/formatted/`.
+**`4-format-solutions.R`**: Processes outputs for plotting. Formatted outputs are saved to `data/outputs/formatted/`.
 
-**`5-figures.R`**: Generates all main manuscript figures, including the Pareto front and spatial maps of selected solutions (restoration-focused, equal trade-offs, production-focused).
+**`5-figures.R`**: Generates all main manuscript figures, including the Pareto front and maps of selected solutions (restoration-focused, equal trade-offs, production-focused).
 
 **`6-figures-supp.R`**: Generates supplementary figures.
 
