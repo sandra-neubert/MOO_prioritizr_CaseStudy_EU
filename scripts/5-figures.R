@@ -6,14 +6,14 @@ library(sf)
 library(irr)
 library(ggcorrplot)
 
-scenario_name <- "multi_hier_rest_0.3"
+scenario_name <- "multi_ws_rest_0.141"
 s_formatted <- readRDS(paste0("data/outputs/formatted/", scenario_name, "_formatted.rds"))
 obj_df <- s_formatted$obj_df
 sel_df <- s_formatted$sel_df
 s_sf <- s_formatted$s_sf
 
 ######## Pareto front plot
-sol_order <- c("Restoration-focused", "Equal trade-offs", "Production-focused")
+sol_order <- c("Restoration-focused", "Balanced trade-offs", "Production-focused")
 
 sel_df <- sel_df %>%
   mutate(
@@ -101,12 +101,10 @@ names(maps) <- sel_df$sol_label
 
 final_plot <- pareto_plot /
   ((maps[["Restoration-focused"]] + theme(legend.position="none")) |
-     (maps[["Equal trade-offs"]]) |
+     (maps[["Balanced trade-offs"]]) |
      (maps[["Production-focused"]] + theme(legend.position="none"))) +
   plot_annotation(tag_levels = 'A')
 
-ggsave("figures/plot_pf_maps_no_constraints_sn2.png",
-       final_plot, width = 8.5, height = 6.5, dpi = 300)
 
 ###### Corr plot
 sol_cols <- paste0("solution_", sel_df$solution_id)
@@ -293,7 +291,7 @@ top_row <- plot_spacer() |
 top_row <- top_row + plot_layout(widths = c(1, 2, 1))
 
 middle_row <-   ((maps[["Restoration-focused"]] + theme(legend.position="none")) |
-                   (maps[["Equal trade-offs"]]) |
+                   (maps[["Balanced trade-offs"]]) |
                    (maps[["Production-focused"]] + theme(legend.position="none")))
 
 bottom_row <-

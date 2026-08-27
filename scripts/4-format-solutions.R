@@ -198,7 +198,7 @@ prep_solution_output <- function(s, PU_sf, mode = "dominant") {
     mutate(
       sol_label = c("Restoration-focused",
                     "Production-focused",
-                    "Equal trade-offs"),
+                    "Balanced trade-offs"),
       sol_label = factor(sol_label, levels = sol_label),
       sol_colour = c("#009E73", "#0072B2", "#D55E00")
     )
@@ -211,11 +211,11 @@ prep_solution_output <- function(s, PU_sf, mode = "dominant") {
 }
 
 #FORMAT DATA
-scenario_name <- "multi_hier_rest_0.141"
+scenario_name <- "multi_ws_rest_0.141"
 s <- readRDS(paste0("data/outputs/", scenario_name, ".rds"))
 s_formatted <- prep_solution_output(s, PU_sf)
-#s_formatted_prop <- prep_solution_output(s, PU_sf, mode = "proportions")
+s_formatted_prop <- prep_solution_output(s, PU_sf, mode = "proportions")
 
 saveRDS(s_formatted, paste0("data/outputs/formatted/", scenario_name, "_formatted.rds"))
-#saveRDS(s_formatted_prop, paste0("data/outputs/formatted/", scenario_name, "_formatted_prop.rds"))
+saveRDS(s_formatted_prop, paste0("data/outputs/formatted/", scenario_name, "_formatted_prop.rds"))
 

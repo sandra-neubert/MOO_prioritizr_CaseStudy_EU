@@ -1,4 +1,4 @@
-#source("scripts/0-preliminaries.R") # for package installation
+#source("scripts/0-preliminaries.R") # for package installations
 
 library(prioritizr)
 library(fst)

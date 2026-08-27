@@ -46,7 +46,7 @@ plot_data$use <- factor(
 
 plot_data$sol_label <- factor(
   plot_data$sol_label,
-  levels = c("Restoration-focused", "Equal trade-offs", "Production-focused")
+  levels = c("Restoration-focused", "Balanced trade-offs", "Production-focused")
 )
 
 panel_labels <- plot_data %>%
