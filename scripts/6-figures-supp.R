@@ -5,7 +5,7 @@ library(patchwork)
 library(sf)
 
 # LOAD DATA
-scenario_name <- "multi_ws_rest_0.3"
+scenario_name <- "multi_hier_rest_0.3"
 s_formatted_prop <- readRDS(paste0("data/outputs/formatted/", scenario_name, "_formatted_prop.rds"))
 s_sf <- s_formatted_prop$s_sf
 sel_df <- s_formatted_prop$sel_df
